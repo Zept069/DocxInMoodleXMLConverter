@@ -11,7 +11,13 @@ public class MigrateDocxToXML {
 
     private final static String inputPath = "src/io/input/";
     private final static String outputPath = "src/io/output/";
-    private final static String fileName = "Krugman_12e_tb_08_MC.docx";
+
+    private final static String fileEnding = ".docx";
+
+    /**
+     * HIER DEN FILENAMEN!!!
+     */
+    private final static String fileName = "Krugman_12e_tb_08_MC";
 
     private static BufferedWriter writer = null;
 
@@ -23,8 +29,8 @@ public class MigrateDocxToXML {
             return;
         }
 
-        List<String> lines = readDocxFile(inputPath + fileName);
-        createXMLFile(outputPath + fileName.replace("docx", "xml"), lines);
+        List<String> lines = readDocxFile(inputPath + fileName + fileEnding);
+        createXMLFile(outputPath + fileName + ".xml", lines);
 
 
     }
@@ -177,7 +183,6 @@ public class MigrateDocxToXML {
         writeLine("\t</generalfeedback>");
 
         writeLine("\t<defaultgrade>1</defaultgrade>");
-        // TODO passt das??
         writeLine("\t<penalty>0.3333333</penalty>");
         writeLine("\t<hidden>0</hidden>");
         writeLine("\t<idnumber/>");

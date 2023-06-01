@@ -16,8 +16,9 @@ public class MigrateDocxToXML {
      * HIER DEN FILENAMEN!!!
      */
     private final static String fileName = "Krugman_12e_tb_08_MC";
-    private static final Map<Integer, List<String>> realToOriginialQuestionNumberMap = new HashMap<>();
-
+    private static final Map<String, List<String>> realToOriginialQuestionNumberMap = new LinkedHashMap<>();
+    private static final List<String> ignoredQuestions = new ArrayList<>();
+    private static int ignoredFiles = 0;
     private static int questionNameNumber = 0;
     private static BufferedWriter writer = null;
 
@@ -38,7 +39,7 @@ public class MigrateDocxToXML {
         System.out.println("—————————————————————————————————————————————————————");
         System.out.println("|realQuestionNumber\t|originalQuestionNumber\t|ignored|\t");
         realToOriginialQuestionNumberMap.forEach((realQuestionNumber, originalQuestionNumber) -> System.out.println("|"
-                + realQuestionNumber + (realQuestionNumber.toString().length() < 3 ? "\t\t\t\t\t" : "\t\t\t\t") + "|"
+                + realQuestionNumber + (realQuestionNumber.length() < 3 ? "\t\t\t\t\t" : "\t\t\t\t") + "|"
                 + originalQuestionNumber.get(0) + "\t\t\t\t\t\t|" + (originalQuestionNumber.get(1).equals("false") ? "\t\t|" : "YES\t|")));
         System.out.println("—————————————————————————————————————————————————————");
 
@@ -89,12 +90,12 @@ public class MigrateDocxToXML {
                 questionNameNumber++;
                 int i = question.indexOf(")");
                 String originalQuestionNameNumber = question.substring(0, i);
-                realToOriginialQuestionNumberMap.put(questionNameNumber, Arrays.asList(originalQuestionNameNumber, "false"));
+                realToOriginialQuestionNumberMap.put(String.valueOf(questionNameNumber - ignoredFiles), Arrays.asList(originalQuestionNameNumber, "false"));
 
                 if (questionFooter.startsWith("Answer:  ADifficulty") || questionFooter.startsWith("Answer:  BDifficulty")
                         || questionFooter.startsWith("Answer:  CDifficulty") || questionFooter.startsWith("Answer:  DDifficulty")
                         || questionFooter.startsWith("Answer:  EDifficulty")) {
-                    writeQuestion(questionNameNumber + ")", question.substring(i + 2));
+                    writeQuestion(questionNameNumber - ignoredFiles + ")", question.substring(i + 2));
 
 
                     String[] answerSplit = questionFooter.split(":");
@@ -109,7 +110,9 @@ public class MigrateDocxToXML {
 
                     writeLine("</question>");
                 } else {
-                    realToOriginialQuestionNumberMap.get(questionNameNumber).set(1, "true");
+                    realToOriginialQuestionNumberMap.remove(String.valueOf(questionNameNumber - ignoredFiles));
+                    realToOriginialQuestionNumberMap.put("* " + originalQuestionNameNumber + " *", Arrays.asList(originalQuestionNameNumber, "true"));
+                    ignoredFiles++;
                 }
                 question = "";
                 answerA = "";

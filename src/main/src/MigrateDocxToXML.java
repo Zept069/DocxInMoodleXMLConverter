@@ -4,8 +4,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MigrateDocxToXML {
 
@@ -13,12 +12,13 @@ public class MigrateDocxToXML {
     private final static String outputPath = "src/io/output/";
 
     private final static String fileEnding = ".docx";
-
     /**
      * HIER DEN FILENAMEN!!!
      */
     private final static String fileName = "Krugman_12e_tb_08_MC";
+    private static final Map<Integer, List<String>> realToOriginialQuestionNumberMap = new HashMap<>();
 
+    private static int questionNameNumber = 0;
     private static BufferedWriter writer = null;
 
 
@@ -32,6 +32,15 @@ public class MigrateDocxToXML {
         List<String> lines = readDocxFile(inputPath + fileName + fileEnding);
         createXMLFile(outputPath + fileName + ".xml", lines);
 
+        System.out.println();
+        System.out.println("QUESTION MAPPING:");
+        System.out.println();
+        System.out.println("—————————————————————————————————————————————————————");
+        System.out.println("|realQuestionNumber\t|originalQuestionNumber\t|ignored|\t");
+        realToOriginialQuestionNumberMap.forEach((realQuestionNumber, originalQuestionNumber) -> System.out.println("|"
+                + realQuestionNumber + (realQuestionNumber.toString().length() < 3 ? "\t\t\t\t\t" : "\t\t\t\t") + "|"
+                + originalQuestionNumber.get(0) + "\t\t\t\t\t\t|" + (originalQuestionNumber.get(1).equals("false") ? "\t\t|" : "YES\t|")));
+        System.out.println("—————————————————————————————————————————————");
 
     }
 
@@ -77,21 +86,31 @@ public class MigrateDocxToXML {
             if (searchForQuestion && searchForQuestionFooter) {
                 searchForQuestionFooter = false;
 
-                writeQuestion(question);
+                questionNameNumber++;
+                int i = question.indexOf(")");
+                String originalQuestionNameNumber = question.substring(0, i);
+                realToOriginialQuestionNumberMap.put(questionNameNumber, Arrays.asList(originalQuestionNameNumber, "false"));
+
+                if (questionFooter.startsWith("Answer:  ADifficulty") || questionFooter.startsWith("Answer:  BDifficulty")
+                        || questionFooter.startsWith("Answer:  CDifficulty") || questionFooter.startsWith("Answer:  DDifficulty")
+                        || questionFooter.startsWith("Answer:  EDifficulty")) {
+                    writeQuestion(questionNameNumber + ")", question.substring(i + 2));
 
 
-                String[] answerSplit = questionFooter.split(":");
-                char answerChar = answerSplit[1].charAt(2);
+                    String[] answerSplit = questionFooter.split(":");
+                    char answerChar = answerSplit[1].charAt(2);
 
 
-                writeAnswer(answerA, answerChar == 'A');
-                writeAnswer(answerB, answerChar == 'B');
-                writeAnswer(answerC, answerChar == 'C');
-                writeAnswer(answerD, answerChar == 'D');
-                writeAnswer(answerE, answerChar == 'E');
+                    writeAnswer(answerA, answerChar == 'A');
+                    writeAnswer(answerB, answerChar == 'B');
+                    writeAnswer(answerC, answerChar == 'C');
+                    writeAnswer(answerD, answerChar == 'D');
+                    writeAnswer(answerE, answerChar == 'E');
 
-                writeLine("</question>");
-
+                    writeLine("</question>");
+                } else {
+                    realToOriginialQuestionNumberMap.get(questionNameNumber).set(1, "true");
+                }
                 question = "";
                 answerA = "";
                 answerB = "";
@@ -161,12 +180,8 @@ public class MigrateDocxToXML {
         }
     }
 
-    private static void writeQuestion(String question) throws Exception {
+    private static void writeQuestion(String questionName, String questionText) throws Exception {
         writeLine("<question type=\"multichoice\">");
-
-        int i = question.indexOf(")");
-        String questionName = question.substring(0, i + 1);
-        String questionText = question.substring(i + 2);
 
         writeLine("\t<name>");
         writeLine("\t\t<text>" + questionName + "</text>");

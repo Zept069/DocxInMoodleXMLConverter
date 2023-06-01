@@ -40,7 +40,7 @@ public class MigrateDocxToXML {
         realToOriginialQuestionNumberMap.forEach((realQuestionNumber, originalQuestionNumber) -> System.out.println("|"
                 + realQuestionNumber + (realQuestionNumber.toString().length() < 3 ? "\t\t\t\t\t" : "\t\t\t\t") + "|"
                 + originalQuestionNumber.get(0) + "\t\t\t\t\t\t|" + (originalQuestionNumber.get(1).equals("false") ? "\t\t|" : "YES\t|")));
-        System.out.println("—————————————————————————————————————————————");
+        System.out.println("—————————————————————————————————————————————————————");
 
     }
 
